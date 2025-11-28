@@ -3,605 +3,579 @@
 <head>
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
-  <!-- Required for Relayer WASM workers -->
   <meta http-equiv="Cross-Origin-Opener-Policy" content="same-origin"/>
   <meta http-equiv="Cross-Origin-Embedder-Policy" content="require-corp"/>
-
-  <title>Secret Resume Filter · Zama FHEVM</title>
-
-  <!-- Unique look: Space Grotesk + DM Mono -->
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <title>Secret Support Router · Zama FHEVM</title>
 
   <style>
     :root{
-      --bg: #0a0c12;
-      --ink: #e7ecf3;
-      --muted:#8b93a7;
-      --glass:#111521;
-      --line:#1b2030;
-      --neon:#7cfff3;
-      --vio:#a291ff;
-      --rose:#ff7a9e;
-      --lime:#8aff63;
-      --amber:#ffcc66;
-      --rad: 18px;
-      --shadow: 0 14px 50px rgba(0,0,0,.45);
-      --mono: "DM Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
-      --sans: "Space Grotesk", system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, "Helvetica Neue", Arial, sans-serif;
+      --bg:#0b1020; --ink:#e6eaf6; --muted:#a3b0c7; --line:#1e2742;
+      --card:#0f1730; --elev:#111a38; --accent:#6de1ff; --accent2:#a78bfa; --good:#34d399; --bad:#fb7185;
+      --mono: ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+      --sans: Inter,system-ui,-apple-system,Segoe UI,Roboto,Helvetica Neue,Arial,sans-serif;
+      --r:18px; --shadow: 0 20px 50px rgba(0,0,0,.35);
     }
     *{box-sizing:border-box}
     html,body{height:100%}
     body{
-      margin:0; color:var(--ink); font-family:var(--sans); background: radial-gradient(1200px 600px at -10% -10%, #142038 0%, transparent 60%), radial-gradient(1000px 800px at 110% -20%, #1e1028 0%, transparent 55%), var(--bg);
+      margin:0; color:var(--ink); font-family:var(--sans); line-height:1.5;
+      background:
+        radial-gradient(900px 600px at 10% -10%, rgba(167,139,250,.15), transparent 60%),
+        radial-gradient(900px 600px at 110% 10%, rgba(109,225,255,.15), transparent 60%),
+        linear-gradient(180deg, #0a0f1e 0%, #0a1022 50%, #0b1226 100%);
     }
+    .shell{max-width:1200px;margin:24px auto;padding:0 18px}
     header{
-      position:sticky; top:0; z-index:10;
-      display:flex; align-items:center; justify-content:space-between; gap:16px;
-      padding:14px clamp(16px, 3vw, 32px);
-      background: rgba(9,12,18,.65);
-      backdrop-filter: blur(10px);
-      border-bottom: 1px solid var(--line);
+      display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap;
+      background: linear-gradient(180deg, rgba(17,26,56,.8), rgba(14,22,46,.6));
+      border:1px solid var(--line); border-radius: var(--r); padding:14px 16px; box-shadow: var(--shadow);
     }
     .brand{display:flex; align-items:center; gap:12px}
-    .orb{
-      width:42px; height:42px; border-radius:50%;
+    .logo{
+      width:44px;height:44px;border-radius:12px;display:grid;place-items:center;
       background:
-        conic-gradient(from 180deg, #0ef, #9f6, #c7f, #0ef);
-      filter: blur(.3px) saturate(120%);
-      box-shadow: 0 0 0 2px rgba(255,255,255,.05), 0 0 40px rgba(124,255,243,.25) inset;
+        radial-gradient(60% 60% at 30% 30%, rgba(109,225,255,.4), transparent 60%),
+        radial-gradient(60% 60% at 70% 70%, rgba(167,139,250,.4), transparent 60%),
+        #0b1126;
+      border:1px solid #233058; box-shadow: inset 0 0 0 1px rgba(173,216,230,.15), 0 10px 30px rgba(109,225,255,.15);
+      color:#cde8ff; font-weight:900; letter-spacing:.5px;
     }
-    h1{margin:0; font-size:18px; letter-spacing:.2px; font-weight:700}
-    .sub{color:var(--muted); font-weight:600; font-size:12px}
-    .chip{
-      font:700 12px var(--mono);
-      color:#0b1320; background:linear-gradient(90deg, var(--neon), #b5fffb 70%);
-      border-radius:999px; padding:8px 12px; border:none; cursor:pointer;
-      box-shadow: 0 6px 24px rgba(124,255,243,.25);
+    .brand h1{margin:0;font-size:18px;letter-spacing:.2px}
+    .brand small{display:block;color:var(--muted);font-weight:600}
+
+    .pill{display:inline-flex;align-items:center;gap:8px;padding:8px 12px;border:1px solid var(--line);border-radius:999px;background:rgba(15,23,56,.6)}
+    .btn{
+      appearance:none; border:1px solid var(--line); background:linear-gradient(180deg,#172347,#0f1839);
+      color:#e8f2ff; padding:10px 14px; border-radius:12px; font-weight:800; letter-spacing:.2px; cursor:pointer;
+      transition: .15s transform, .15s box-shadow; box-shadow: 0 10px 25px rgba(0,0,0,.3);
     }
-    .chip.ghost{
-      background:transparent; color:var(--ink);
-      border:1px dashed #293149;
-      box-shadow:none;
-    }
-    main{max-width:1180px; margin:28px auto 80px; padding:0 18px}
-    .hero{
-      display:grid; grid-template-columns:1.1fr .9fr; gap:22px; align-items:stretch;
-    }
-    @media (max-width: 1020px){ .hero{ grid-template-columns:1fr; } }
+    .btn:hover{ transform: translateY(-1px); box-shadow: 0 14px 28px rgba(0,0,0,.35); }
+    .btn[disabled]{opacity:.6; cursor:not-allowed; transform:none}
+    .btn.primary{ background: linear-gradient(180deg,#2a3f87,#1f2d63); border-color:#2f3e7a; }
+    .btn.accent{ background: linear-gradient(180deg,#30b5d9,#218fb3); border-color:#2bb1d6;}
+    .btn.good{ background: linear-gradient(180deg,#10b981,#0a8f62); border-color:#10b981;}
+    .btn.bad{ background: linear-gradient(180deg,#ef4444,#b91c1c); border-color:#ef4444;}
+
+    .grid{display:grid; grid-template-columns: 320px 1fr; gap:18px; margin-top:18px}
+    @media (max-width: 980px){ .grid{ grid-template-columns: 1fr; } }
 
     .panel{
-      background: linear-gradient(180deg, rgba(255,255,255,.02), rgba(255,255,255,.0)),
-                  radial-gradient(400px 160px at 20% -20%, rgba(167,145,255,.10), transparent 60%),
-                  radial-gradient(360px 160px at 110% 10%, rgba(124,255,243,.08), transparent 60%),
-                  var(--glass);
-      border:1px solid var(--line); border-radius: var(--rad);
-      box-shadow: var(--shadow);
-      padding: 18px clamp(16px, 2.2vw, 22px);
+      background: linear-gradient(180deg, rgba(17,27,60,.85), rgba(12,20,44,.85));
+      border:1px solid var(--line); border-radius: var(--r); box-shadow: var(--shadow); padding:16px;
     }
-    .panel h2{ margin:0 0 10px; font-size:18px; letter-spacing:.2px }
+    .panel h2{margin:0 0 6px; font-size:16px; letter-spacing:.15px}
     .muted{color:var(--muted)}
-    .grid{ display:grid; grid-template-columns:1fr 1fr; gap:18px; }
-    @media (max-width: 900px){ .grid{ grid-template-columns:1fr; } }
-
-    label{display:block; font:600 12px var(--mono); color:#b7bfd4; margin:8px 0 6px; letter-spacing:.02em}
-    .row{display:flex; gap:10px; flex-wrap:wrap; align-items:center}
+    .card{ background: linear-gradient(180deg, rgba(13,20,42,.9), rgba(9,15,34,.95)); border:1px solid var(--line); border-radius:16px; padding:14px; }
+    .stack{display:grid; gap:10px}
+    label{font-size:11px; text-transform: uppercase; letter-spacing:.12em; color:#c7d2fe; font-weight:800}
     input, select{
-      width:100%; padding:12px 12px; color:var(--ink);
-      background: #0b0f18; border:1px solid #1a2236; border-radius: 14px; outline:none;
-      font-weight:700; box-shadow: inset 0 0 0 1px rgba(255,255,255,.02);
-      transition: .15s ease;
+      width:100%; padding:12px 12px; border-radius:12px; border:1px solid #22315b;
+      background: #0b1230; color:#eaf2ff; outline:none; font-weight:800; letter-spacing:.2px;
+      transition:.15s;
     }
-    input:focus, select:focus{ border-color:#3f6bff; box-shadow: 0 0 0 4px rgba(63,107,255,.15)}
-    .btn{
-      appearance:none; border:0; border-radius:14px; padding:12px 14px; font-weight:800; cursor:pointer; transition:.15s;
-    }
-    .btn:disabled{opacity:.6; cursor:not-allowed}
-    .btn.primary{ color:#0b1320; background: linear-gradient(90deg, var(--neon), #97f0ff 60%); box-shadow: 0 8px 26px rgba(124,255,243,.25); }
-    .btn.alt{ color:#0b1320; background: linear-gradient(90deg, var(--amber), #ffe6a6); box-shadow: 0 8px 26px rgba(255,204,102,.2);}
-    .btn.ghost{ color:var(--ink); background:transparent; border:1px dashed #2a334d; }
+    input:focus{ border-color:#3a5bd9; box-shadow: 0 0 0 4px rgba(58,91,217,.18); }
+    .row{display:flex; gap:10px; flex-wrap:wrap; align-items:center}
+    .two{display:grid; grid-template-columns: 1fr 1fr; gap:10px}
+    .mono{font-family:var(--mono)}
+    .kpi{display:grid; grid-template-columns: repeat(3,1fr); gap:10px}
+    .kpi .card{display:grid; gap:4px}
+    .value{font:900 18px var(--mono)}
+    .ok{color:var(--good)} .err{color:var(--bad)} .accent{color:var(--accent)}
 
     .status{
-      margin-top:10px; font:600 12px var(--mono); color:var(--muted);
-      border:1px dashed #26314a; border-radius: 12px; padding:10px; word-break: break-all;
-      background: #0b0f18;
+      min-height:48px; border:1px dashed #2a3760; border-radius:12px; display:flex; align-items:center; justify-content:center;
+      font:700 12px var(--mono); color:#cde8ff; background: rgba(10,17,40,.6); padding:8px;
     }
-    .status.ok{ color:#b5ffd2; border-color:#194b2f; background: linear-gradient(180deg, #0b1611, #0b1611) }
-    .status.err{ color:#ffc6ce; border-color:#4b1926; background: linear-gradient(180deg, #160b0e, #160b0e) }
 
-    .cardTitle{ display:flex; align-items:center; justify-content:space-between; gap:10px }
-    .tag{ font:700 11px var(--mono); color:#091120; background: linear-gradient(90deg, #b6ff8a, #7cffbe); border-radius: 999px; padding:6px 10px }
-    .inline{ display:flex; gap:10px; align-items:center; flex-wrap:wrap }
-    .pill{ font:700 11px var(--mono); color:var(--muted); border:1px dashed #2b3450; border-radius:999px; padding:6px 10px; background:#0b0f18 }
-    .contrast{ color:#0b1320; background: linear-gradient(90deg, #a291ff, #e0d7ff); border-radius: 999px; padding:6px 10px; font:700 11px var(--mono); }
-
-    .skills{ display:flex; flex-wrap:wrap; gap:8px; margin-top:6px }
-    .skill{
-      border:1px solid #2a3350; background:#0c1220; color:#dfe6ff;
-      padding:8px 10px; border-radius:999px; font:700 12px var(--mono);
-      cursor:pointer; user-select:none;
+    .handle{
+      background:#081028; border:1px dashed #21305a; color:#cde8ff; font:700 12px var(--mono);
+      padding:10px; border-radius:12px; word-break:break-all;
     }
-    .skill.active{ border-color:#4ea1ff; box-shadow:0 0 0 3px rgba(78,161,255,.15) inset; color:#adccff }
-    .list{ display:grid; gap:8px; margin-top:8px; }
-    .logline{ font:600 12px var(--mono); color:#c9d5ff; background:#0e1423; border:1px solid #243153; border-radius:12px; padding:10px }
-    .sm{ font-size:12px }
-    .mono{ font-family: var(--mono) }
+    .mesh{
+      position:relative; overflow:hidden; border-radius: var(--r);
+    }
+    .mesh::after{
+      content:""; position:absolute; inset:-40%; background:
+        radial-gradient(600px 300px at 30% 10%, rgba(109,225,255,.08), transparent 60%),
+        radial-gradient(600px 300px at 70% 80%, rgba(167,139,250,.08), transparent 60%);
+      filter: blur(16px); pointer-events:none;
+    }
   </style>
 </head>
 <body>
-<header>
-  <div class="brand">
-    <div class="orb"></div>
-    <div>
-      <h1>Secret Resume Filter</h1>
-      <div class="sub">Encrypted résumés · Employer sees just “fit / no”</div>
-    </div>
-  </div>
-  <div class="inline">
-    <span class="pill mono" id="netTag">Network: —</span>
-    <button id="btnConnect" class="chip">Connect Wallet</button>
-  </div>
-</header>
-
-<main>
-  <section class="hero">
-    <!-- Candidate -->
-    <article class="panel">
-      <div class="cardTitle">
-        <h2>Candidate · Apply Privately</h2>
-        <span class="tag">Encrypted client-side</span>
-      </div>
-      <p class="muted sm">Your attributes are encrypted locally using Zama Relayer SDK 0.2.0. The employer will only be able to decrypt the final verdict.</p>
-
-      <div class="grid">
+  <div class="shell">
+    <header class="mesh">
+      <div class="brand">
+        <div class="logo">FHE</div>
         <div>
-          <label>Position ID</label>
-          <input id="c_pos" type="number" min="1" placeholder="e.g. 101"/>
-        </div>
-        <div>
-          <label>Years of experience (0..255)</label>
-          <input id="c_exp" type="number" min="0" max="255" placeholder="e.g. 5"/>
-        </div>
-        <div>
-          <label>Education level (0..4)</label>
-          <select id="c_edu">
-            <option value="0">0 — None</option>
-            <option value="1">1 — High School</option>
-            <option value="2" selected>2 — Bachelor</option>
-            <option value="3">3 — Master</option>
-            <option value="4">4 — PhD</option>
-          </select>
-        </div>
-        <div>
-          <label>Expected salary (USD)</label>
-          <input id="c_salary" type="number" min="0" placeholder="e.g. 90000"/>
+          <h1>Secret Support Router</h1>
+          <small class="muted">Homomorphic ticket → hidden agent match (Sepolia)</small>
         </div>
       </div>
-
-      <label class="inline" style="margin-top:12px">Skills (bitmask)
-        <span class="pill">Requirement is “contains all”</span>
-      </label>
-      <div id="skills" class="skills">
-        <!-- 8 demo skills -> 16-bit mask still fine -->
-        <div class="skill" data-bit="0">Solidity</div>
-        <div class="skill" data-bit="1">TypeScript</div>
-        <div class="skill" data-bit="2">React</div>
-        <div class="skill" data-bit="3">Node</div>
-        <div class="skill" data-bit="4">DevOps</div>
-        <div class="skill" data-bit="5">Rust</div>
-        <div class="skill" data-bit="6">FHE</div>
-        <div class="skill" data-bit="7">Data Eng</div>
+      <div class="row">
+        <span id="net" class="pill">Network: —</span>
+        <span id="addr" class="pill mono">—</span>
+        <button id="btnConnect" class="btn primary">Connect Wallet</button>
       </div>
+    </header>
 
-      <div class="inline" style="margin-top:12px">
-        <button id="btnApply" class="btn primary">Submit Encrypted Application</button>
-        <span id="applyTx" class="pill mono">—</span>
-      </div>
-      <div id="applyLog" class="status">Waiting…</div>
-      <div class="muted sm" style="margin-top:8px">Note: Only the employer of this position can decrypt the verdict.</div>
-    </article>
+    <section class="grid">
+      <!-- LEFT: Admin & Utilities -->
+      <aside class="panel">
+        <h2>Admin · Agents</h2>
+        <p class="muted">Owner uploads encrypted skill vectors (4 dims). Values are kept private onchain; only routing result is decryptable by user & RouterApp.</p>
 
-    <!-- Employer -->
-    <article class="panel">
-      <div class="cardTitle">
-        <h2>Employer · Manage Criteria & Verdicts</h2>
-        <span class="contrast mono" id="empTag">You: —</span>
-      </div>
-      <p class="muted sm">Create a position, set encrypted criteria, and decrypt application verdicts addressed to you.</p>
-
-      <div class="grid">
-        <div>
-          <label>Position ID</label>
-          <input id="e_pos" type="number" min="1" placeholder="e.g. 101"/>
-        </div>
-        <div class="inline" style="align-items:flex-end">
-          <button id="btnCreatePos" class="btn ghost">Create/Claim Position</button>
-          <span class="pill mono" id="ownerBadge">—</span>
-        </div>
-
-        <div>
-          <label>minExp (uint8)</label>
-          <input id="e_minExp" type="number" min="0" max="255" placeholder="e.g. 3"/>
-        </div>
-        <div>
-          <label>minEdu (uint8)</label>
-          <select id="e_minEdu">
-            <option value="0">0 — None</option>
-            <option value="1">1 — HS</option>
-            <option value="2" selected>2 — Bachelor</option>
-            <option value="3">3 — Master</option>
-            <option value="4">4 — PhD</option>
-          </select>
-        </div>
-        <div>
-          <label>requiredSkills (uint16 bitmask)</label>
-          <input id="e_reqSkills" type="number" min="0" max="65535" placeholder="e.g. 133 (bits)"/>
-        </div>
-        <div>
-          <label>maxSalary (uint32)</label>
-          <input id="e_maxSalary" type="number" min="0" placeholder="e.g. 120000"/>
-        </div>
-      </div>
-
-      <div class="inline" style="margin-top:12px">
-        <button id="btnSetEnc" class="btn primary">Set Encrypted Criteria</button>
-        <button id="btnSetPlain" class="btn alt">Set Plain (dev)</button>
-        <button id="btnPublic" class="btn ghost">Make Criteria Public</button>
-      </div>
-      <div id="adminLog" class="status">—</div>
-
-      <div style="margin-top:14px" class="cardTitle">
-        <h2>Applications · Decrypt Verdicts</h2>
-        <span class="pill mono" id="evtCount">0 items</span>
-      </div>
-      <div class="inline sm">
-        <span class="pill">Filter by Position ID</span>
-        <input id="f_pos" type="number" min="1" placeholder="e.g. 101" style="max-width:160px"/>
-        <button id="btnScan" class="btn ghost">Scan Events</button>
-      </div>
-      <div id="events" class="list"></div>
-    </article>
-  </section>
-
-  <section style="margin-top:24px" class="panel">
-    <div class="inline">
-      <span class="pill mono">Contract:</span>
-      <span class="pill mono" id="addr">0xCF991A8321746f1b4F6330d7Bbb090aA1daF3d07</span>
-      <span class="pill mono">Relayer: testnet</span>
-      <span class="pill mono" id="vers">SDK 0.2.0 · Ethers v6</span>
-    </div>
-  </section>
-</main>
-
-<!-- SDKs -->
-<script type="module" crossorigin src="https://cdn.zama.ai/relayer-sdk-js/0.2.0/relayer-sdk-js.js"></script>
-<script type="module" crossorigin src="https://cdn.jsdelivr.net/npm/ethers@6.13.4/+esm"></script>
-
-<script type="module">
-  import { BrowserProvider, Contract, Log, toBeHex } from "https://cdn.jsdelivr.net/npm/ethers@6.13.4/+esm";
-  import { initSDK, createInstance, SepoliaConfig, generateKeypair } from "https://cdn.zama.ai/relayer-sdk-js/0.2.0/relayer-sdk-js.js";
-
-  // ===== Config =====
-  const CONTRACT_ADDRESS = "0x12D716b26D896adC8994eFe4b36f11EF37158D96";
-  const RELAYER_URL = "https://relayer.testnet.zama.cloud";
-  const CHAIN_ID_HEX = "0xaa36a7"; // Sepolia
-
-  // ABI (subset used by the app) — SecretResumeFilter
-  const abi = [
-    { type:"function", name:"version", inputs:[], outputs:[{type:"string"}], stateMutability:"pure" },
-    { type:"function", name:"createPosition", inputs:[{name:"positionId",type:"uint256"},{name:"employer",type:"address"}], outputs:[], stateMutability:"nonpayable" },
-    { type:"function", name:"setCriteriaEncrypted", inputs:[
-      {type:"uint256"}, {type:"bytes32"}, {type:"bytes32"}, {type:"bytes32"}, {type:"bytes32"}, {type:"bytes"}
-    ], outputs:[], stateMutability:"nonpayable" },
-    { type:"function", name:"setCriteriaPlain", inputs:[
-      {type:"uint256"},{type:"uint8"},{type:"uint8"},{type:"uint16"},{type:"uint32"}
-    ], outputs:[], stateMutability:"nonpayable" },
-    { type:"function", name:"makeCriteriaPublic", inputs:[{type:"uint256"}], outputs:[], stateMutability:"nonpayable" },
-    { type:"function", name:"getCriteriaHandles", inputs:[{type:"uint256"}], outputs:[
-      {type:"bytes32"},{type:"bytes32"},{type:"bytes32"},{type:"bytes32"},{type:"address"}
-    ], stateMutability:"view" },
-    { type:"function", name:"evaluateApplication", inputs:[
-      {type:"uint256"}, {type:"bytes32"}, {type:"bytes32"}, {type:"bytes32"}, {type:"bytes32"}, {type:"bytes"}
-    ], outputs:[{type:"bytes1"}], stateMutability:"nonpayable" },
-
-    // Events
-    { type:"event", name:"PositionCreated", inputs:[
-      {indexed:true, name:"positionId", type:"uint256"},
-      {indexed:true, name:"employer", type:"address"}
-    ]},
-    { type:"event", name:"CriteriaUpdated", inputs:[
-      {indexed:true, name:"positionId", type:"uint256"},
-      {indexed:false, name:"minExpH", type:"bytes32"},
-      {indexed:false, name:"minEduH", type:"bytes32"},
-      {indexed:false, name:"requiredSkillsH", type:"bytes32"},
-      {indexed:false, name:"maxSalaryH", type:"bytes32"}
-    ]},
-    { type:"event", name:"ApplicationEvaluated", inputs:[
-      {indexed:true, name:"positionId", type:"uint256"},
-      {indexed:true, name:"candidate", type:"address"},
-      {indexed:true, name:"employer", type:"address"},
-      {indexed:false, name:"verdictHandle", type:"bytes32"}
-    ]},
-  ];
-
-  // ===== UI elements =====
-  const $ = id => document.getElementById(id);
-  const els = {
-    netTag: $("netTag"), btnConnect: $("btnConnect"), empTag: $("empTag"),
-    addr: $("addr"), vers: $("vers"), ownerBadge: $("ownerBadge"),
-    // candidate
-    c_pos: $("c_pos"), c_exp: $("c_exp"), c_edu: $("c_edu"), c_salary: $("c_salary"),
-    skills: $("skills"), btnApply: $("btnApply"), applyLog: $("applyLog"), applyTx: $("applyTx"),
-    // employer
-    e_pos: $("e_pos"), e_minExp: $("e_minExp"), e_minEdu: $("e_minEdu"),
-    e_reqSkills: $("e_reqSkills"), e_maxSalary: $("e_maxSalary"),
-    btnCreatePos: $("btnCreatePos"), btnSetEnc: $("btnSetEnc"),
-    btnSetPlain: $("btnSetPlain"), btnPublic: $("btnPublic"), adminLog: $("adminLog"),
-    // events
-    evtCount: $("evtCount"), events: $("events"),
-    f_pos: $("f_pos"), btnScan: $("btnScan"),
-  };
-  els.addr.textContent = CONTRACT_ADDRESS;
-
-  // ===== State =====
-  let provider, signer, user, contract, relayer;
-
-  // ===== Helpers =====
-  const short = a => a ? a.slice(0,6)+"…"+a.slice(-4) : "—";
-  const ok = (el, text) => { el.className="status ok"; el.textContent=text; };
-  const err= (el, text) => { el.className="status err"; el.textContent=text; };
-  const info= (el, text)=> { el.className="status"; el.textContent=text; };
-  const toU8  = n => (Number.isInteger(n)&&n>=0&&n<=255);
-  const toU16 = n => (Number.isInteger(n)&&n>=0&&n<=65535);
-  const toU32 = n => (Number.isInteger(n)&&n>=0&&n<=4294967295);
-
-  // Build skills bitmask from UI
-  function readSkillMask(){
-    let mask = 0;
-    [...els.skills.querySelectorAll('.skill.active')].forEach(s=>{
-      mask |= (1 << Number(s.dataset.bit));
-    });
-    return mask >>> 0;
-  }
-  // Click to toggle skills
-  els.skills.addEventListener('click', (e)=>{
-    const t = e.target.closest('.skill'); if(!t) return;
-    t.classList.toggle('active');
-  });
-
-  // ===== Connect =====
-  els.btnConnect.onclick = async () => {
-    try{
-      if(!window.ethereum) throw new Error("MetaMask not found");
-      provider = new BrowserProvider(window.ethereum);
-      await provider.send("eth_requestAccounts", []);
-      const net = await provider.getNetwork();
-      els.netTag.textContent = `Network: ${String(net.chainId)}`;
-      if(net.chainId !== 11155111n){
-        await provider.send("wallet_switchEthereumChain", [{ chainId: CHAIN_ID_HEX }]);
-      }
-      signer = await provider.getSigner();
-      user = await signer.getAddress();
-      contract = new Contract(CONTRACT_ADDRESS, abi, signer);
-
-      els.btnConnect.textContent = short(user);
-      els.empTag.textContent = "You: " + short(user);
-
-      // Relayer
-      info(els.adminLog, "Bootstrapping Relayer…");
-      await initSDK();
-      relayer = await createInstance({ ...SepoliaConfig, relayerUrl: RELAYER_URL, network: window.ethereum, debug:true });
-      ok(els.adminLog, "Relayer ready ✓");
-
-    }catch(e){
-      err(els.adminLog, e.message || String(e));
-    }
-  };
-
-  // ===== Employer: create/claim position =====
-  els.btnCreatePos.onclick = async ()=>{
-    try{
-      if(!contract) await els.btnConnect.onclick();
-      const pos = Number(els.e_pos.value || 0);
-      if(!(pos>0)) throw new Error("Enter Position ID");
-      const tx = await contract.createPosition(pos, user);
-      info(els.adminLog, `TX: ${tx.hash}`);
-      await tx.wait();
-      ok(els.adminLog, "Position created/claimed ✓");
-      els.ownerBadge.textContent = "Employer: " + short(user);
-    }catch(e){ err(els.adminLog, e.message || String(e)); }
-  };
-
-  // ===== Employer: set encrypted criteria =====
-  els.btnSetEnc.onclick = async ()=>{
-    try{
-      if(!relayer || !contract) await els.btnConnect.onclick();
-      const pos = Number(els.e_pos.value || 0);
-      const minExp = Number(els.e_minExp.value || 0);
-      const minEdu = Number(els.e_minEdu.value || 0);
-      const reqSkills = Number(els.e_reqSkills.value || 0);
-      const maxSalary = Number(els.e_maxSalary.value || 0);
-      if(!(pos>0)) throw new Error("Enter Position ID");
-      if(!toU8(minExp) || !toU8(minEdu) || !toU16(reqSkills) || !toU32(maxSalary)) throw new Error("Range error");
-
-      info(els.adminLog,"Encrypting criteria…");
-      const buf = relayer.createEncryptedInput(CONTRACT_ADDRESS, user);
-      buf.add8(minExp);
-      buf.add8(minEdu);
-      buf.add16(reqSkills);
-      buf.add32(maxSalary);
-      const { handles, inputProof } = await buf.encrypt();
-
-      // static call (may fail on some RPCs; safe to proceed anyway)
-      try{ await contract.setCriteriaEncrypted.staticCall(pos, handles[0], handles[1], handles[2], handles[3], inputProof); }catch{}
-
-      const tx = await contract.setCriteriaEncrypted(pos, handles[0], handles[1], handles[2], handles[3], inputProof);
-      info(els.adminLog, `TX: ${tx.hash}`);
-      await tx.wait();
-      ok(els.adminLog, "Encrypted criteria set ✓");
-    }catch(e){ err(els.adminLog, e.message || String(e)); }
-  };
-
-  // ===== Employer: set plain criteria (dev) =====
-  els.btnSetPlain.onclick = async ()=>{
-    try{
-      if(!contract) await els.btnConnect.onclick();
-      const pos = Number(els.e_pos.value || 0);
-      const minExp = Number(els.e_minExp.value || 0);
-      const minEdu = Number(els.e_minEdu.value || 0);
-      const reqSkills = Number(els.e_reqSkills.value || 0);
-      const maxSalary = Number(els.e_maxSalary.value || 0);
-      if(!(pos>0)) throw new Error("Enter Position ID");
-      if(!toU8(minExp) || !toU8(minEdu) || !toU16(reqSkills) || !toU32(maxSalary)) throw new Error("Range error");
-
-      const tx = await contract.setCriteriaPlain(pos, minExp, minEdu, reqSkills, maxSalary);
-      info(els.adminLog, `TX: ${tx.hash}`);
-      await tx.wait();
-      ok(els.adminLog, "Plain criteria set ✓");
-    }catch(e){ err(els.adminLog, e.message || String(e)); }
-  };
-
-  // ===== Employer: make criteria public (optional demo)
-  els.btnPublic.onclick = async ()=>{
-    try{
-      if(!contract) await els.btnConnect.onclick();
-      const pos = Number(els.e_pos.value || 0);
-      if(!(pos>0)) throw new Error("Enter Position ID");
-      const tx = await contract.makeCriteriaPublic(pos);
-      info(els.adminLog, `TX: ${tx.hash}`);
-      await tx.wait();
-      ok(els.adminLog, "Criteria are publicly decryptable ✓");
-    }catch(e){ err(els.adminLog, e.message || String(e)); }
-  };
-
-  // ===== Candidate: submit encrypted application =====
-  els.btnApply.onclick = async ()=>{
-    try{
-      if(!relayer || !contract) await els.btnConnect.onclick();
-      const pos = Number(els.c_pos.value || 0);
-      const years = Number(els.c_exp.value || 0);
-      const edu = Number(els.c_edu.value || 0);
-      const salary = Number(els.c_salary.value || 0);
-      const skillsMask = readSkillMask();
-
-      if(!(pos>0)) throw new Error("Enter Position ID");
-      if(!toU8(years) || !toU8(edu) || !toU16(skillsMask) || !toU32(salary)) throw new Error("Range error");
-
-      info(els.applyLog, "Encrypting application…");
-      const buf = relayer.createEncryptedInput(CONTRACT_ADDRESS, user);
-      buf.add8(years);
-      buf.add8(edu);
-      buf.add16(skillsMask);
-      buf.add32(salary);
-      const { handles, inputProof } = await buf.encrypt();
-
-      try{ await contract.evaluateApplication.staticCall(pos, handles[0], handles[1], handles[2], handles[3], inputProof); }catch{}
-
-      const tx = await contract.evaluateApplication(pos, handles[0], handles[1], handles[2], handles[3], inputProof);
-      els.applyTx.textContent = tx.hash;
-      info(els.applyLog, "Waiting for receipt…");
-      const rcpt = await tx.wait();
-
-      // We emit ApplicationEvaluated; employer will decrypt. Candidate cannot decrypt (ACL)
-      ok(els.applyLog, "Application submitted ✓ • Employer will see the verdict");
-    }catch(e){ err(els.applyLog, e.message || String(e)); }
-  };
-
-  // ===== Employer: scan + decrypt ApplicationEvaluated events =====
-  els.btnScan.onclick = async ()=>{
-    try{
-      if(!contract) await els.btnConnect.onclick();
-      const filterPos = Number(els.f_pos.value || 0);
-      const from = 0n; // you may set recent block here
-      const to = "latest";
-
-      // Build topic filter for ApplicationEvaluated(positionId?, candidate?, employer=you)
-      const iface = new Contract(CONTRACT_ADDRESS, abi, signer).interface;
-      const topic = iface.getEvent("ApplicationEvaluated").topicHash;
-      const posTopic = filterPos>0 ? toBeHex(BigInt(filterPos), 32) : null;
-      const empTopic = toBeHex(BigInt(user), 32); // ethers handles address → topic internally, but we force hex32
-      // Better: use address topic with left-padded 32 bytes
-      const padAddr = (addr)=>"0x"+"0".repeat(24)+addr.slice(2).toLowerCase();
-      const topics = [
-        topic,
-        posTopic,             // indexed positionId
-        null,                 // indexed candidate
-        padAddr(user)         // indexed employer
-      ];
-
-      const logs = await provider.getLogs({ address: CONTRACT_ADDRESS, fromBlock: from, toBlock: to, topics });
-      els.evtCount.textContent = `${logs.length} items`;
-      els.events.innerHTML = "";
-
-      if(logs.length===0){ els.events.innerHTML = `<div class="logline">No events found for employer ${short(user)}${filterPos>0?` · position ${filterPos}`:""}</div>`; return; }
-
-      for(const l of logs.slice(-25).reverse()){ // show last 25
-        const parsed = iface.parseLog(l);
-        const posId = Number(parsed.args.positionId);
-        const cand = parsed.args.candidate;
-        const vH = parsed.args.verdictHandle;
-
-        const row = document.createElement('div');
-        row.className = "logline";
-        row.innerHTML = `
-          <div class="inline" style="justify-content:space-between; gap:12px">
+        <div class="card stack" style="margin-top:10px">
+          <div class="two">
             <div>
-              <div><b>Position:</b> ${posId}</div>
-              <div class="sm muted">Candidate: ${short(cand)} · Handle: <span class="mono">${vH}</span></div>
+              <label>Agent ID (uint32)</label>
+              <input id="agentId" type="number" min="1" placeholder="e.g. 101"/>
             </div>
-            <div class="inline">
-              <button class="btn primary" data-h="${vH}" data-pos="${posId}">Decrypt</button>
+            <div>
+              <label>Status</label>
+              <select id="agentActive">
+                <option value="1">active</option>
+                <option value="0">inactive</option>
+              </select>
             </div>
           </div>
-          <div class="status" style="margin-top:8px">Waiting…</div>
-        `;
-        els.events.appendChild(row);
+          <div class="two">
+            <div><label>Skill[0]</label><input id="s0" type="number" min="0" max="65535" placeholder="0..65535"/></div>
+            <div><label>Skill[1]</label><input id="s1" type="number" min="0" max="65535" placeholder="0..65535"/></div>
+          </div>
+          <div class="two">
+            <div><label>Skill[2]</label><input id="s2" type="number" min="0" max="65535" placeholder="0..65535"/></div>
+            <div><label>Skill[3]</label><input id="s3" type="number" min="0" max="65535" placeholder="0..65535"/></div>
+          </div>
+          <div class="row">
+            <button id="btnAgentEnc" class="btn accent">Upsert Encrypted</button>
+            <!-- Plain (dev) removed by request -->
+            <button id="btnAgentRemove" class="btn bad">Remove</button>
+          </div>
+          <div id="adminStatus" class="status">—</div>
+        </div>
 
-        const btn = row.querySelector("button");
-        const box = row.querySelector(".status");
-        btn.onclick = async ()=>{
-          try{
-            info(box, "EIP-712 signing…");
-            const kp = await generateKeypair();
-            const startTs = Math.floor(Date.now()/1000).toString();
-            const days = "7";
-            const eip = relayer.createEIP712(kp.publicKey, [CONTRACT_ADDRESS], startTs, days);
-            const sig = await signer.signTypedData(
-              eip.domain,
-              { UserDecryptRequestVerification: eip.types.UserDecryptRequestVerification },
-              eip.message
-            );
+        <div class="card" style="margin-top:12px">
+          <div class="kpi">
+            <div class="card">
+              <div class="muted">Active agents (list size)</div>
+              <div id="kpiAgents" class="value">—</div>
+            </div>
+            <div class="card">
+              <div class="muted">Owner</div>
+              <div id="kpiOwner" class="value">—</div>
+            </div>
+            <div class="card">
+              <div class="muted">RouterApp</div>
+              <div id="kpiRouter" class="value">—</div>
+            </div>
+          </div>
+        </div>
+      </aside>
 
-            info(box, "Decrypting verdict…");
-            const pairs = [{ handle: vH, contractAddress: CONTRACT_ADDRESS }];
-            const out = await relayer.userDecrypt(pairs, kp.privateKey, kp.publicKey, sig.replace("0x",""),
-                                                  [CONTRACT_ADDRESS], user, startTs, days);
-            let v = out[vH];
-            if(v===undefined){
-              const k = Object.keys(out).find(k=>k.toLowerCase()===vH.toLowerCase());
-              v = k ? out[k] : undefined;
-            }
-            // verdict is boolean-ish (ebool). Normalize:
-            const yes = (v===true || v==="true" || v===1 || v==="1");
-            if(yes){ ok(box, "✅ FIT"); } else { err(box, "❌ NO FIT"); }
-          }catch(e){ err(box, e.message || String(e)); }
-        };
-      }
-    }catch(e){
-      els.events.innerHTML = `<div class="logline">Scan error: ${e.message||e}</div>`;
+      <!-- RIGHT: User Tickets -->
+      <main class="panel mesh">
+        <h2>Submit Ticket (Encrypted)</h2>
+        <p class="muted">Provide your needs vector and urgency. Contract computes an encrypted best agent id; you decrypt it privately via EIP-712.</p>
+
+        <div class="card stack">
+          <div class="two">
+            <div><label>Need[0]</label><input id="n0" type="number" min="0" max="65535" placeholder="0..65535"/></div>
+            <div><label>Need[1]</label><input id="n1" type="number" min="0" max="65535" placeholder="0..65535"/></div>
+          </div>
+          <div class="two">
+            <div><label>Need[2]</label><input id="n2" type="number" min="0" max="65535" placeholder="0..65535"/></div>
+            <div><label>Need[3]</label><input id="n3" type="number" min="0" max="65535" placeholder="0..65535"/></div>
+          </div>
+          <div class="two">
+            <div><label>Urgency (uint16)</label><input id="urg" type="number" min="0" max="65535" placeholder="e.g. 30"/></div>
+            <div><label>Ticket Salt</label><input id="salt" type="text" placeholder="leave blank to auto-generate"/></div>
+          </div>
+          <div class="row">
+            <button id="btnSubmit" class="btn good">Submit & Decrypt</button>
+            <button id="btnLookup" class="btn">Lookup by Ticket ID</button>
+          </div>
+
+          <div class="stack">
+            <div class="muted">Ticket ID (keccak256 of salt • shown after send)</div>
+            <div id="ticketIdBox" class="handle mono">—</div>
+            <div class="muted">AgentId Encrypted Handle (from event)</div>
+            <div id="handleBox" class="handle mono">—</div>
+            <div id="userStatus" class="status">—</div>
+            <div class="status">Best Agent: <span id="result" class="value accent" style="margin-left:8px">—</span></div>
+          </div>
+        </div>
+      </main>
+    </section>
+  </div>
+
+  <!-- SDKs (ESM) -->
+  <script type="module" crossorigin src="https://cdn.zama.org/relayer-sdk-js/0.3.0-5/relayer-sdk-js.js"></script>
+  <script type="module" crossorigin src="https://cdn.jsdelivr.net/npm/ethers@6.13.4/+esm"></script>
+
+  <script type="module">
+    import { BrowserProvider, Contract, keccak256, toUtf8Bytes, Interface } from "https://cdn.jsdelivr.net/npm/ethers@6.13.4/+esm";
+    import { initSDK, createInstance, SepoliaConfig, generateKeypair } from "https://cdn.zama.org/relayer-sdk-js/0.3.0-5/relayer-sdk-js.js";
+
+    // ==== Config ====
+    const CONTRACT_ADDRESS = "0xB9335126C6d39B7A694f4D896eac30Ae7d3073aE";
+    const RELAYER_URL = "https://relayer.testnet.zama.org";
+    const CHAIN_ID_HEX = "0xaa36a7"; // Sepolia
+
+    // Minimal ABI
+    const abi = [
+      { type:"function", name:"version", inputs:[], outputs:[{type:"string"}], stateMutability:"pure" },
+      { type:"function", name:"owner", inputs:[], outputs:[{type:"address"}], stateMutability:"view" },
+      { type:"function", name:"routerApp", inputs:[], outputs:[{type:"address"}], stateMutability:"view" },
+      { type:"function", name:"activeAgentCount", inputs:[], outputs:[{type:"uint256"}], stateMutability:"view" },
+
+      { type:"function", name:"upsertAgentEncrypted",
+        inputs:[ {type:"uint32", name:"agentId"}, {type:"bytes32[4]", name:"skillExt"}, {type:"bytes", name:"proof"}, {type:"bool", name:"active"} ],
+        outputs:[], stateMutability:"nonpayable" },
+
+      { type:"function", name:"removeAgent",
+        inputs:[ {type:"uint32", name:"agentId"} ], outputs:[], stateMutability:"nonpayable" },
+
+      { type:"function", name:"submitTicketAndRoute",
+        inputs:[
+          {type:"bytes32", name:"ticketId"},
+          {type:"bytes32[4]", name:"needExt"},
+          {type:"bytes32", name:"urgencyExt"},
+          {type:"bytes", name:"proof"}
+        ],
+        outputs:[{type:"bytes32"}], stateMutability:"nonpayable" },
+
+      { type:"function", name:"getMatchHandle",
+        inputs:[{type:"bytes32", name:"ticketId"}],
+        outputs:[{type:"bytes32"}], stateMutability:"view" },
+
+      { type:"event",  name:"TicketSubmitted",
+        inputs:[
+          {indexed:true,  name:"ticketId",     type:"bytes32"},
+          {indexed:true,  name:"user",         type:"address"},
+          {indexed:false, name:"agentIdHandle",type:"bytes32"}
+        ]},
+    ];
+    const iface = new Interface(abi);
+
+    // ==== Shortcuts ====
+    const $ = (id)=>document.getElementById(id);
+    const els = {
+      btnConnect: $("btnConnect"), net: $("net"), addr: $("addr"),
+      // admin
+      agentId: $("agentId"), agentActive: $("agentActive"),
+      s0: $("s0"), s1: $("s1"), s2: $("s2"), s3: $("s3"),
+      btnAgentEnc: $("btnAgentEnc"), btnAgentRemove: $("btnAgentRemove"),
+      adminStatus: $("adminStatus"), kpiAgents: $("kpiAgents"), kpiOwner: $("kpiOwner"), kpiRouter: $("kpiRouter"),
+      // user
+      n0: $("n0"), n1: $("n1"), n2: $("n2"), n3: $("n3"), urg: $("urg"), salt: $("salt"),
+      btnSubmit: $("btnSubmit"), btnLookup: $("btnLookup"),
+      ticketIdBox: $("ticketIdBox"), handleBox: $("handleBox"), userStatus: $("userStatus"), result: $("result"),
+    };
+
+    els.addr.textContent = CONTRACT_ADDRESS;
+    els.net.textContent = "Network: Sepolia";
+
+    // ==== State ====
+    let provider, signer, user, contract, relayer;
+
+    // ==== Logger helpers (подробные логи) ====
+    const now = () => performance.now();
+    const KB = (n)=> (n/1024).toFixed(2)+' KB';
+    const short = (a)=> a ? a.slice(0,6)+"…"+a.slice(-4) : "—";
+    const TS = () => new Date().toISOString().replace('T',' ').replace('Z','');
+    function group(title, fn){
+      console.groupCollapsed(`%c${TS()} ${title}`, "color:#6de1ff");
+      try{ return fn(); } finally { console.groupEnd(); }
     }
-  };
+    async function agroup(title, fn){
+      console.groupCollapsed(`%c${TS()} ${title}`, "color:#6de1ff");
+      try{ return await fn(); } finally { console.groupEnd(); }
+    }
+    function status(el, text, type=null){
+      el.textContent = text;
+      el.className = "status"+(type===true?" ok": type===false?" err": "");
+    }
 
-  // Network badge
-  (async ()=>{
-    try{
-      if(window.ethereum){
-        const net = await (new BrowserProvider(window.ethereum)).getNetwork();
-        els.netTag.textContent = net.chainId===11155111n ? "Network: Sepolia" : `Network: ${String(net.chainId)}`;
-      }
-    }catch{}
-  })();
-</script>
+    // ==== Connect ====
+    els.btnConnect.onclick = async () => {
+      await agroup("[CONNECT] Wallet + Relayer init", async () => {
+        try{
+          if(!window.ethereum) throw new Error("MetaMask not found");
+          const t0 = now();
+          provider = new BrowserProvider(window.ethereum);
+          await provider.send("eth_requestAccounts", []);
+          const net = await provider.getNetwork();
+          console.log("chainId:", String(net.chainId));
+          if(net.chainId !== 11155111n){
+            console.log("Switching to Sepolia…");
+            await provider.send("wallet_switchEthereumChain", [{ chainId: CHAIN_ID_HEX }]);
+          }
+          signer = await provider.getSigner();
+          user = await signer.getAddress();
+          contract = new Contract(CONTRACT_ADDRESS, abi, signer);
+          console.log("Signer:", user);
+
+          await initSDK();
+          relayer = await createInstance({ ...SepoliaConfig, relayerUrl: RELAYER_URL, network: window.ethereum, debug:true });
+          console.log("Relayer:", RELAYER_URL);
+
+          els.btnConnect.textContent = short(user);
+          status(els.adminStatus, "Connected: "+short(user), true);
+          status(els.userStatus, "Relayer ready", true);
+
+          // KPIs
+          try{
+            const [own, rout, cnt] = await Promise.all([contract.owner(), contract.routerApp(), contract.activeAgentCount()]);
+            els.kpiOwner.textContent = short(own);
+            els.kpiRouter.textContent = short(rout);
+            els.kpiAgents.textContent = String(cnt);
+            console.log("owner:", own, "routerApp:", rout, "activeAgents:", String(cnt));
+          }catch(e){ console.warn("KPI fetch warn:", e); }
+
+          console.log("Connect done in", (now()-t0).toFixed(1), "ms");
+        }catch(e){
+          console.error("Connect error:", e);
+          status(els.adminStatus, e.message||String(e), false);
+          status(els.userStatus, e.message||String(e), false);
+        }
+      });
+    };
+
+    // ==== Admin: upsert encrypted ====
+    els.btnAgentEnc.onclick = async () => {
+      await agroup("[ADMIN] Upsert Agent Encrypted", async () => {
+        try{
+          if(!contract || !relayer) throw new Error("Connect first");
+          const agentId = Number(els.agentId.value||0);
+          const active = els.agentActive.value === "1";
+          const vals = [els.s0, els.s1, els.s2, els.s3].map(x=>Number(x.value||0));
+          if(!(agentId>0)) throw new Error("Enter Agent ID");
+          if(!vals.every(v => Number.isInteger(v) && v>=0 && v<=65535)) throw new Error("Skills must be uint16 (0..65535)");
+
+          status(els.adminStatus, "Encrypting skills…");
+          const t0 = now();
+          console.groupCollapsed("%c[ENC] createEncryptedInput", "color:#a78bfa");
+          const buf = relayer.createEncryptedInput(CONTRACT_ADDRESS, user);
+          vals.forEach((v,i)=> { console.log(`add16(skill[${i}]):`, v); buf.add16(v); });
+          const { handles, inputProof } = await buf.encrypt();
+          console.log("handles:", handles);
+          console.log("proof bytes:", inputProof?.length||0, `(${KB(inputProof?.length||0)})`);
+          console.groupEnd();
+          console.log("Encrypt+proof in", (now()-t0).toFixed(1), "ms");
+
+          // (optional) simulate
+          console.groupCollapsed("%c[SIM] staticCall upsertAgentEncrypted", "color:#a78bfa");
+          try{
+            await contract.upsertAgentEncrypted.staticCall(agentId, handles.slice(0,4), inputProof, active);
+            console.log("staticCall OK");
+          }catch(e){
+            console.warn("staticCall revert (non-fatal):", e.shortMessage || e.message || e);
+          }
+          console.groupEnd();
+
+          status(els.adminStatus, "Submitting tx…");
+          const tx = await contract.upsertAgentEncrypted(agentId, handles.slice(0,4), inputProof, active);
+          console.log("tx:", tx.hash);
+          const rcpt = await tx.wait();
+          console.log("mined: block", rcpt.blockNumber, "gasUsed", rcpt.gasUsed?.toString?.()||"");
+          status(els.adminStatus, "Encrypted agent upserted ✓", true);
+
+          try{ const cnt = await contract.activeAgentCount(); els.kpiAgents.textContent = String(cnt); }catch{}
+        }catch(e){
+          console.error("Upsert enc error:", e);
+          status(els.adminStatus, e.message || String(e), false);
+        }
+      });
+    };
+
+    // ==== Admin: remove ====
+    els.btnAgentRemove.onclick = async () => {
+      await agroup("[ADMIN] Remove Agent", async () => {
+        try{
+          if(!contract) throw new Error("Connect first");
+          const agentId = Number(els.agentId.value||0);
+          if(!(agentId>0)) throw new Error("Enter Agent ID");
+          status(els.adminStatus, "Submitting remove…");
+          const tx = await contract.removeAgent(agentId);
+          console.log("tx:", tx.hash);
+          const rcpt = await tx.wait();
+          console.log("mined: block", rcpt.blockNumber);
+          status(els.adminStatus, "Agent removed ✓", true);
+        }catch(e){
+          console.error("Remove error:", e);
+          status(els.adminStatus, e.message || String(e), false);
+        }
+      });
+    };
+
+    // ==== Helpers (tickets) ====
+    const randSalt = () => {
+      const r = crypto.getRandomValues(new Uint8Array(16));
+      return Array.from(r).map(b=>b.toString(16).padStart(2,"0")).join("");
+    };
+    const ticketFromSalt = (s) => keccak256(toUtf8Bytes(s));
+
+    async function bootstrapKP(){
+      return await agroup("[USER] EIP-712 Signature (userDecrypt)", async () => {
+        const kp = await generateKeypair();
+        const startTs = Math.floor(Date.now()/1000).toString();
+        const days = "7";
+        const eip = relayer.createEIP712(kp.publicKey, [CONTRACT_ADDRESS], startTs, days);
+        console.log("EIP712.domain:", eip.domain);
+        console.log("EIP712.types:", eip.types);
+        console.log("EIP712.message fields:", Object.keys(eip.message));
+        const sig = await signer.signTypedData(
+          eip.domain,
+          { UserDecryptRequestVerification: eip.types.UserDecryptRequestVerification },
+          eip.message
+        );
+        console.log("signature (hex len):", sig.length);
+        return { kp, startTs, days, sig: sig.replace("0x","") };
+      });
+    }
+
+    // ==== User: submit & decrypt ====
+    els.btnSubmit.onclick = async () => {
+      await agroup("[USER] Submit Ticket & Decrypt Result", async () => {
+        try{
+          if(!contract || !relayer) throw new Error("Connect first");
+          const needs = [els.n0, els.n1, els.n2, els.n3].map(x=>Number(x.value||0));
+          const urg = Number(els.urg.value||0);
+          if(!needs.every(v => Number.isInteger(v) && v>=0 && v<=65535)) throw new Error("Need[0..3] must be uint16");
+          if(!(Number.isInteger(urg) && urg>=0 && urg<=65535)) throw new Error("Urgency must be uint16");
+
+          // Ticket
+          let salt = (els.salt.value||"").trim();
+          if(!salt){ salt = "salt-"+randSalt(); els.salt.value = salt; }
+          const ticketId = ticketFromSalt(salt);
+          els.ticketIdBox.textContent = ticketId;
+          status(els.userStatus, "Encrypting payload…");
+
+          // Encrypt (4 needs + urgency)
+          const t0 = now();
+          console.groupCollapsed("%c[ENC] createEncryptedInput", "color:#6de1ff");
+          const buf = relayer.createEncryptedInput(CONTRACT_ADDRESS, user);
+          needs.forEach((v,i)=> { console.log(`add16(need[${i}]):`, v); buf.add16(v); });
+          console.log("add16(urgency):", urg); buf.add16(urg);
+          const { handles, inputProof } = await buf.encrypt();
+          console.log("handles:", handles);
+          console.log("proof bytes:", inputProof?.length||0, `(${KB(inputProof?.length||0)})`);
+          console.groupEnd();
+          console.log("Encrypt+proof in", (now()-t0).toFixed(1), "ms");
+
+          // staticCall
+          console.groupCollapsed("%c[SIM] staticCall submitTicketAndRoute", "color:#6de1ff");
+          try{
+            await contract.submitTicketAndRoute.staticCall(ticketId, handles.slice(0,4), handles[4], inputProof);
+            console.log("staticCall OK");
+          }catch(e){
+            console.warn("staticCall revert (non-fatal):", e.shortMessage || e.message || e);
+          }
+          console.groupEnd();
+
+          // send tx
+          status(els.userStatus, "Submitting tx…");
+          const tx = await contract.submitTicketAndRoute(ticketId, handles.slice(0,4), handles[4], inputProof);
+          console.groupCollapsed("%c[TX] sent", "color:#6de1ff");
+          console.log("hash:", tx.hash);
+          console.groupEnd();
+
+          const rcpt = await tx.wait();
+          console.groupCollapsed("%c[TX] mined", "color:#6de1ff");
+          console.log("blockNumber:", rcpt.blockNumber, "gasUsed:", rcpt.gasUsed?.toString?.()||"");
+          console.log("logs:", rcpt.logs.length);
+          console.groupEnd();
+
+          // parse event
+          console.groupCollapsed("%c[EVT] TicketSubmitted parse", "color:#6de1ff");
+          const topic = iface.getEvent("TicketSubmitted").topicHash;
+          const log = rcpt.logs.find(l => l.topics?.[0] === topic);
+          if(!log) throw new Error("TicketSubmitted not found");
+          const parsed = iface.parseLog(log);
+          console.log("ticketId:", parsed.args.ticketId);
+          console.log("user:", parsed.args.user);
+          console.log("agentIdHandle:", parsed.args.agentIdHandle);
+          console.groupEnd();
+
+          const handle = parsed.args.agentIdHandle;
+          els.handleBox.textContent = handle;
+
+          // userDecrypt
+          status(els.userStatus, "Decrypting best agent…");
+          const { kp, startTs, days, sig } = await bootstrapKP();
+
+          console.groupCollapsed("%c[DEC] userDecrypt", "color:#6de1ff");
+          const pairs = [{ handle, contractAddress: CONTRACT_ADDRESS }];
+          console.log("pairs:", pairs);
+          console.log("startTs:", startTs, "days:", days);
+          const out = await relayer.userDecrypt(pairs, kp.privateKey, kp.publicKey, sig, [CONTRACT_ADDRESS], await signer.getAddress(), startTs, days);
+          console.log("userDecrypt output keys:", Object.keys(out));
+          console.groupEnd();
+
+          let val = out[handle];
+          if(val===undefined){
+            const k = Object.keys(out).find(k=>k.toLowerCase() === String(handle).toLowerCase());
+            val = k ? out[k] : undefined;
+          }
+          if(val===undefined) throw new Error("Decryption output missing");
+
+          const best = typeof val === "string" ? BigInt(val) : BigInt(val);
+          els.result.textContent = best.toString();
+          status(els.userStatus, "Done", true);
+        }catch(e){
+          console.error("Submit error:", e);
+          status(els.userStatus, e.message || String(e), false);
+        }
+      });
+    };
+
+    // ==== Lookup by ticketId ====
+    els.btnLookup.onclick = async () => {
+      await agroup("[USER] Lookup & Decrypt Stored Match", async () => {
+        try{
+          if(!contract || !relayer) throw new Error("Connect first");
+          let salt = (els.salt.value||"").trim();
+          if(!salt) throw new Error("Enter the same salt used previously");
+          const ticketId = ticketFromSalt(salt);
+          els.ticketIdBox.textContent = ticketId;
+
+          console.groupCollapsed("%c[READ] getMatchHandle", "color:#6de1ff");
+          const handle = await contract.getMatchHandle(ticketId);
+          console.log("handle:", handle);
+          console.groupEnd();
+
+          if(handle === "0x0000000000000000000000000000000000000000000000000000000000000000"){
+            throw new Error("No match stored for this ticket");
+          }
+          els.handleBox.textContent = handle;
+
+          status(els.userStatus, "Decrypting stored match…");
+          const { kp, startTs, days, sig } = await bootstrapKP();
+
+          console.groupCollapsed("%c[DEC] userDecrypt (lookup)", "color:#6de1ff");
+          const pairs = [{ handle, contractAddress: CONTRACT_ADDRESS }];
+          console.log("pairs:", pairs);
+          const out = await relayer.userDecrypt(pairs, kp.privateKey, kp.publicKey, sig, [CONTRACT_ADDRESS], await signer.getAddress(), startTs, days);
+          console.log("userDecrypt output keys:", Object.keys(out));
+          console.groupEnd();
+
+          let val = out[handle];
+          if(val===undefined){
+            const k = Object.keys(out).find(k=>k.toLowerCase() === String(handle).toLowerCase());
+            val = k ? out[k] : undefined;
+          }
+          if(val===undefined) throw new Error("Decryption output missing");
+
+          const best = typeof val === "string" ? BigInt(val) : BigInt(val);
+          els.result.textContent = best.toString();
+          status(els.userStatus, "Done", true);
+        }catch(e){
+          console.error("Lookup error:", e);
+          status(els.userStatus, e.message || String(e), false);
+        }
+      });
+    };
+  </script>
 </body>
 </html>
